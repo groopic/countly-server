@@ -40,7 +40,7 @@ function validateAppForWriteAPI(params) {
                     delete eventsToLog[i].sum;
                     delete eventsToLog[i].count;
                 }
-                common.db.collection('ingrainEvents').save(eventsToLog, function (err, eventsToLog){
+                common.db.collection('ingrainEvents' + app_key).save(eventsToLog, function (err, eventsToLog){
                     if(err){
                         common.db.collection('eventsErrors').save({error: 'Error'}, function (err, eventsError){});
                         common.db.collection('eventsErrors').save({errorMsg: err}, function (err, eventsError){});
