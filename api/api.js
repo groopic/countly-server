@@ -29,6 +29,31 @@ function validateAppForWriteAPI(params) {
             return false;
         }
 
+        if(params.qstring.events){
+            var eventsToLog = params.qstring.events;
+                for(var i=0; i<eventsToLog.length; i++){
+                    eventsToLog[i].app_key = params.qstring.app_key;
+                    eventsToLog[i].device_id = params.qstring.device_id;
+                    eventsToLog[i].ip_address = params.ip_address;
+                    eventsToLog[i].user = params.user;
+                    eventsToLog[i].app_user_id = params.app_user_id;
+                    delete eventsToLog[i].sum;
+                    delete eventsToLog[i].count;
+                }
+                common.db.collection('ingrainEvents').save(eventsToLog, function (err, eventsToLog){
+                    if(err){
+                        common.db.collection('eventsErrors').save({error: 'Error'}, function (err, eventsError){});
+                        common.db.collection('eventsErrors').save({errorMsg: err}, function (err, eventsError){});
+                    }
+                });
+//      common.db.collection('eventLogs').save(params, function (err, eventLog){
+//          if(err){
+//              common.db.collection('eventLogsErrors').save({error: 'Error'}, function (err, eventLog){});
+//              common.db.collection('eventLogsErrors').save({errorMsg: err}, function (err, eventLog){});
+//          }
+//      });
+        }
+
         params.app_id = app['_id'];
         params.app_cc = app['country'];
         params.appTimezone = app['timezone'];
