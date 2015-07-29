@@ -25,34 +25,88 @@ function validateAppForWriteAPI(params) {
             if (common.config.api.safe) {
                 common.returnMessage(params, 400, 'App does not exist');
             }
-
             return false;
         }
 
         if(params.qstring.events){
-            var eventsToLog = params.qstring.events;
-                for(var i=0; i<eventsToLog.length; i++){
-                    eventsToLog[i].app_key = params.qstring.app_key;
-                    eventsToLog[i].device_id = params.qstring.device_id;
-                    eventsToLog[i].ip_address = params.ip_address;
-                    eventsToLog[i].user = params.user;
-                    eventsToLog[i].app_user_id = params.app_user_id;
-                    delete eventsToLog[i].sum;
-                    delete eventsToLog[i].count;
+            var eventsToLog = JSON.parse(JSON.stringify(params.qstring.events));
+            for(var i=0; i<eventsToLog.length; i++){
+                switch(eventsToLog[i].key){
+                    case "metadataRequest":
+                        eventsToLog[i].segmentation.environment = JSON.parse(eventsToLog[i].segmentation.environment);
+                        break;
+                    case "vastRequest":
+                        eventsToLog[i].segmentation.environment = JSON.parse(eventsToLog[i].segmentation.environment);
+                        eventsToLog[i].segmentation.responseTime = parseInt(eventsToLog[i].segmentation.responseTime);
+                        break;
+                    case "adImpression":
+                        eventsToLog[i].segmentation.quartile = parseInt(eventsToLog[i].segmentation.quartile);
+                        eventsToLog[i].segmentation.heightOnScreen = parseFloat(eventsToLog[i].segmentation.heightOnScreen);
+                        eventsToLog[i].segmentation.timeOfFlight = parseInt(eventsToLog[i].segmentation.timeOfFlight);
+                        eventsToLog[i].segmentation.widthOnScreen = parseFloat(eventsToLog[i].segmentation.widthOnScreen);
+                        break;
+                    case "adClick":
+                        eventsToLog[i].segmentation.frameNumber = parseInt(eventsToLog[i].segmentation.frameNumber);
+                        break;
+                    case "error":
+                        break;
+                    case "crash":
+                        break;
+                    case "appCrash":
+                        break;
+                    case "videoPlay":
+                        break;
+                    case "WebView":
+                        eventsToLog[i].segmentation.timeOnScreen = parseInt(eventsToLog[i].segmentation.timeOnScreen);
+                        break;
                 }
-                common.db.collection('ingrainEvents' + app_key).save(eventsToLog, function (err, eventsToLog){
-                    if(err){
-                        common.db.collection('eventsErrors').save({error: 'Error'}, function (err, eventsError){});
-                        common.db.collection('eventsErrors').save({errorMsg: err}, function (err, eventsError){});
-                    }
-                });
-//      common.db.collection('eventLogs').save(params, function (err, eventLog){
-//          if(err){
-//              common.db.collection('eventLogsErrors').save({error: 'Error'}, function (err, eventLog){});
-//              common.db.collection('eventLogsErrors').save({errorMsg: err}, function (err, eventLog){});
-//          }
-//      });
+                eventsToLog[i].app_key = params.qstring.app_key;
+                eventsToLog[i].device_id = params.qstring.device_id;
+                eventsToLog[i].ip_address = params.ip_address;
+                eventsToLog[i].user = params.user;
+                eventsToLog[i].app_user_id = params.app_user_id;
+                delete eventsToLog[i].sum;
+                delete eventsToLog[i].count;
+            }
+
+            common.db.collection('ingrainEvents' + params.qstring.app_key).save(eventsToLog, function (err, eventsToLog){
+                if(err){
+                    common.db.collection('eventsErrors').save({errorMsg: err}, function (err, eventsError){});
+                }
+            });
+
+            params.qstring.events.forEach(function(event){
+                delete event.segmentation;
+                // var segmentation = event.segmentation;
+                // switch(event.key){
+                //     case "metadataRequest":
+                //         delete event.segmentation.environment;
+                //         break;
+                //     case "vastRequest":
+                //         delete event.segmentation.environment;
+                //         break;
+                //     case "adImpression":
+                //         break;
+                //     case "adClick":
+                //         delete event.segmentation.url;
+                //         break;
+                //     case "error":
+                //         delete event.segmentation.errorDescription;
+                //         break;
+                //     case "crash":
+                //         delete event.segmentation.type;
+                //         break;
+                //     case "appCrash":
+                //         break;
+                //     case "videoPlay":
+                //         break;
+                //     case "WebView":
+                //         delete event.segmentation.url;
+                //         break;
+                // }
+            });
         }
+
 
         params.app_id = app['_id'];
         params.app_cc = app['country'];
