@@ -3,6 +3,7 @@ var http = require('http'),
     os = require('os'),
     url = require('url'),
     common = require('./utils/common.js'),
+    geoip = require('geoip-lite'),
     countlyApi = {
         data:{
             usage:require('./parts/data/usage.js'),
@@ -29,6 +30,26 @@ function validateAppForWriteAPI(params) {
         }
 
         if(params.qstring.events){
+            var locationData = geoip.lookup(params.ip_address);
+
+            if (locationData) {
+                if (locationData.country) {
+                    params.user.country = locationData.country;
+                }
+
+                if (locationData.city) {
+                    params.user.city = locationData.city;
+                } else {
+                    params.user.city = 'Unknown';
+                }
+
+                // Coordinate values of the user location has no use for now
+                if (locationData.ll) {
+                    params.user.lat = locationData.ll[0];
+                    params.user.lng = locationData.ll[1];
+                }
+            }
+
             var eventsToLog = JSON.parse(JSON.stringify(params.qstring.events));
             for(var i=0; i<eventsToLog.length; i++){
                 switch(eventsToLog[i].key){
@@ -77,36 +98,8 @@ function validateAppForWriteAPI(params) {
 
             params.qstring.events.forEach(function(event){
                 delete event.segmentation;
-                // var segmentation = event.segmentation;
-                // switch(event.key){
-                //     case "metadataRequest":
-                //         delete event.segmentation.environment;
-                //         break;
-                //     case "vastRequest":
-                //         delete event.segmentation.environment;
-                //         break;
-                //     case "adImpression":
-                //         break;
-                //     case "adClick":
-                //         delete event.segmentation.url;
-                //         break;
-                //     case "error":
-                //         delete event.segmentation.errorDescription;
-                //         break;
-                //     case "crash":
-                //         delete event.segmentation.type;
-                //         break;
-                //     case "appCrash":
-                //         break;
-                //     case "videoPlay":
-                //         break;
-                //     case "WebView":
-                //         delete event.segmentation.url;
-                //         break;
-                // }
             });
         }
-
 
         params.app_id = app['_id'];
         params.app_cc = app['country'];
