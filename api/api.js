@@ -100,7 +100,7 @@ function validateAppForWriteAPI(params) {
             var d = new Date();
             
 
-            common.db.collection(d.ddmmyyyy() + 'ingrainEvents' + params.qstring.app_key).save(eventsToLog, function (err, eventsToLog){
+            common.db.collection("ingrain" + d.ddmmyyyy() + 'Events' + params.qstring.app_key).save(eventsToLog, function (err, eventsToLog){
                 if(err){
                     common.db.collection('eventsErrors').save({errorMsg: err}, function (err, eventsError){});
                 }
