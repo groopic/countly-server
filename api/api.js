@@ -16,6 +16,13 @@ var http = require('http'),
         }
     };
 
+Date.prototype.ddmmyyyy = function() {
+    var yyyy = this.getFullYear().toString();
+    var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
+    var dd  = this.getDate().toString();
+    return (dd[1]?dd:"0"+dd[0]) + (mm[1]?mm:"0"+mm[0]) + yyyy; // padding
+};
+
 http.globalAgent.maxSockets = common.config.api.max_sockets || 1024;
 
 // Checks app_key from the http request against "apps" collection.
@@ -89,17 +96,11 @@ function validateAppForWriteAPI(params) {
                 delete eventsToLog[i].sum;
                 delete eventsToLog[i].count;
             }
-            Date.prototype.yyyymmdd = function() {
-                var yyyy = this.getFullYear().toString();
-                var mm = (this.getMonth()+1).toString(); // getMonth() is zero-based
-                var dd  = this.getDate().toString();
-                return yyyy + (mm[1]?mm:"0"+mm[0]) + (dd[1]?dd:"0"+dd[0]); // padding
-            };
 
             var d = new Date();
             
 
-            common.db.collection('d.yyyymmdd();ingrainEvents' + params.qstring.app_key).save(eventsToLog, function (err, eventsToLog){
+            common.db.collection(d.ddmmyyyy() + 'ingrainEvents' + params.qstring.app_key).save(eventsToLog, function (err, eventsToLog){
                 if(err){
                     common.db.collection('eventsErrors').save({errorMsg: err}, function (err, eventsError){});
                 }
